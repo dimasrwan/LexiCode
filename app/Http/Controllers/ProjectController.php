@@ -56,4 +56,12 @@ class ProjectController extends Controller
 
         return view('projects.show', compact('project'));
     }
+
+    public function destroy($id)
+{
+    $project = Project::findOrFail($id);
+    $project->delete();
+
+    return redirect()->route('dashboard')->with('success', 'PROJECT_DELETED_FROM_SYSTEM');
+}
 }

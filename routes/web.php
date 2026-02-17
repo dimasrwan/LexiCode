@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [ProjectController::class, 'index'])->name('dashboard');
 Route::get('/project/{slug}', [ProjectController::class, 'show'])->name('projects.show');
 Route::post('/project/store', [ProjectController::class, 'store'])->name('projects.store');
+Route::delete('/project/{id}', [ProjectController::class, 'destroy'])->name('projects.destroy');
 
 // Route untuk fitur Profile (Bawaan Laravel Breeze/Starter Kit)
 Route::middleware('auth')->group(function () {
