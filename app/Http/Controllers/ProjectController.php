@@ -64,4 +64,23 @@ class ProjectController extends Controller
 
     return redirect()->route('dashboard')->with('success', 'PROJECT_DELETED_FROM_SYSTEM');
 }
+
+public function update(Request $request, $id)
+{
+    $request->validate([
+        'name' => 'required|max:255',
+        'tech_stack' => 'required',
+        'description' => 'required',
+    ]);
+
+    $project = Project::findOrFail($id);
+    $project->update([
+        'name' => $request->name,
+        'slug' => Str::slug($request->name),
+        'description' => $request->description,
+        'tech_stack' => $request->tech_stack,
+    ]);
+
+    return redirect()->route('dashboard')->with('success', 'REPOSITORY_UPDATED_SUCCESSFULLY');
+}
 }
