@@ -3,84 +3,69 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Models\Module; // TAMBAHKAN INI
 use Illuminate\Http\Request;
-use Illuminate\Support\Str; // Penting untuk fungsi Str::slug()
+use Illuminate\Support\Str;
 
 class ProjectController extends Controller
 {
-    /**
-     * Menampilkan daftar proyek di dashboard utama.
-     */
     public function index()
     {
-        // Mengambil semua proyek dan menghitung jumlah modul di dalamnya
         $projects = Project::withCount('modules')->get();
-
         return view('dashboard', compact('projects'));
     }
 
-    /**
-     * Menyimpan proyek baru ke database.
-     */
     public function store(Request $request)
     {
-        // 1. Validasi input agar data tidak kosong
         $request->validate([
             'name' => 'required|max:255',
             'tech_stack' => 'required',
             'description' => 'required',
         ]);
 
-        // 2. Simpan data ke database
         Project::create([
-            'user_id' => 1, // Sementara hardcode, nanti bisa diganti auth()->id()
+            'user_id' => 1, 
             'name' => $request->name,
-            'slug' => Str::slug($request->name), // Mengubah "Project Satu" jadi "project-satu"
+            'slug' => Str::slug($request->name),
             'description' => $request->description,
             'tech_stack' => $request->tech_stack,
         ]);
 
-        // 3. Kembali ke dashboard dengan pesan sukses
         return redirect()->route('dashboard')->with('success', 'Project initialized successfully!');
     }
 
-    /**
-     * Menampilkan detail proyek.
-     */
     public function show($slug)
     {
-        // Mengambil proyek berdasarkan slug beserta modul dan snippet-nya
+        // Pastikan relasi modules ada
         $project = Project::where('slug', $slug)
-            ->with(['modules.snippets'])
+            ->with(['modules']) // Jika belum ada snippets, biarkan modules saja dulu
             ->firstOrFail();
 
         return view('projects.show', compact('project'));
     }
 
+    // TAMBAHKAN FUNGSI INI UNTUK ADD MODULE
+    public function storeModule(Request $request, $projectId)
+    {
+        $request->validate([
+            'title' => 'required|max:255',
+        ]);
+
+        Module::create([
+            'project_id' => $projectId,
+            'title' => $request->title,
+            'slug' => Str::slug($request->title),
+            'order' => Module::where('project_id', $projectId)->count() + 1,
+        ]);
+
+        return back()->with('success', 'MODULE_INITIALIZED_SUCCESSFULLY');
+    }
+
     public function destroy($id)
-{
-    $project = Project::findOrFail($id);
-    $project->delete();
+    {
+        $project = Project::findOrFail($id);
+        $project->delete();
 
-    return redirect()->route('dashboard')->with('success', 'PROJECT_DELETED_FROM_SYSTEM');
-}
-
-public function update(Request $request, $id)
-{
-    $request->validate([
-        'name' => 'required|max:255',
-        'tech_stack' => 'required',
-        'description' => 'required',
-    ]);
-
-    $project = Project::findOrFail($id);
-    $project->update([
-        'name' => $request->name,
-        'slug' => Str::slug($request->name),
-        'description' => $request->description,
-        'tech_stack' => $request->tech_stack,
-    ]);
-
-    return redirect()->route('dashboard')->with('success', 'REPOSITORY_UPDATED_SUCCESSFULLY');
-}
+        return redirect()->route('dashboard')->with('success', 'PROJECT_DELETED_FROM_SYSTEM');
+    }
 }

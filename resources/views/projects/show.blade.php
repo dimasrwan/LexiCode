@@ -3,65 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $project->name }} - LexiCode</title>
+    <title>{{ $project->name }} | LexiCode</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-        body { font-family: 'JetBrains+Mono', monospace; }
-        .code-shadow { box-shadow: 0 0 20px rgba(234, 179, 8, 0.1); }
+        body { font-family: 'JetBrains+Mono', monospace; background: black; color: white; }
     </style>
 </head>
-<body class="bg-black text-zinc-300">
-    <div class="flex h-screen">
-        <aside class="w-64 border-r border-yellow-500/20 bg-zinc-950 p-6 overflow-y-auto">
-            <a href="{{ route('dashboard') }}" class="text-yellow-500 text-xs font-bold mb-8 block hover:underline"><< BACK TO DASHBOARD</a>
-            <h3 class="text-white font-bold text-sm mb-6 uppercase tracking-widest">Modules</h3>
-            <nav class="space-y-4">
-                @foreach($project->modules as $module)
-                    <div class="text-sm">
-                        <p class="text-yellow-500 font-bold mb-2">{{ $module->title }}</p>
-                        <ul class="pl-3 border-l border-zinc-800 space-y-2">
-                            @foreach($module->snippets as $snippet)
-                                <li><a href="#snippet-{{ $snippet->id }}" class="hover:text-white transition-colors text-xs text-zinc-500">- {{ $snippet->title }}</a></li>
-                            @endforeach
-                        </ul>
+<body x-data="{ openAdd: false }">
+    <nav class="border-b border-yellow-500/20 py-4 px-6 bg-zinc-950/50 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <a href="{{ route('dashboard') }}" class="text-zinc-500 hover:text-yellow-400 text-xs font-bold uppercase tracking-widest"><< BACK_TO_DASHBOARD</a>
+            <span class="text-yellow-500 font-black tracking-tighter uppercase">{{ $project->name }}</span>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto py-12 px-6">
+        <header class="mb-12 border-l-4 border-yellow-500 pl-6">
+            <h1 class="text-3xl font-black uppercase tracking-tighter">{{ $project->name }}<span class="text-yellow-500">_</span></h1>
+            <p class="text-zinc-500 text-sm mt-2">{{ $project->description }}</p>
+            <div class="inline-block mt-4 bg-yellow-500 text-black text-[10px] font-black px-2 py-0.5 rounded uppercase">{{ $project->tech_stack }}</div>
+        </header>
+
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-sm font-black text-zinc-400 uppercase tracking-widest">Modules_List</h2>
+            <button @click="openAdd = true" class="text-xs bg-zinc-900 border border-zinc-800 hover:border-yellow-500 px-4 py-2 rounded text-zinc-400 hover:text-yellow-500 transition-all">+ ADD_MODULE</button>
+        </div>
+
+        <div class="space-y-3">
+            @forelse($project->modules as $index => $module)
+                <div class="bg-zinc-900/50 border border-zinc-800 p-4 rounded-lg flex justify-between items-center group hover:border-zinc-700 transition-all cursor-pointer">
+                    <div class="flex items-center gap-4">
+                        <span class="text-zinc-700 font-bold">0{{ $index + 1 }}</span>
+                        <span class="font-bold text-zinc-300 group-hover:text-yellow-500 uppercase">{{ $module->title }}</span>
                     </div>
-                @endforeach
-            </nav>
-        </aside>
+                    <span class="text-zinc-600 group-hover:text-zinc-400">EDIT_CONTENT >></span>
+                </div>
+            @empty
+                <div class="border-2 border-dashed border-zinc-900 p-10 text-center rounded-xl text-zinc-600 italic text-sm">
+                    No modules found. System idle.
+                </div>
+            @endforelse
+        </div>
+    </main>
 
-        <main class="flex-1 overflow-y-auto p-12 bg-zinc-900/20">
-            <header class="mb-12 border-b border-zinc-800 pb-8">
-                <span class="bg-yellow-500 text-black text-[10px] font-black px-2 py-1 rounded mb-4 inline-block uppercase">{{ $project->tech_stack }}</span>
-                <h1 class="text-5xl font-black text-white italic tracking-tighter">{{ $project->name }}</h1>
-                <p class="mt-4 text-zinc-500 max-w-2xl leading-relaxed">{{ $project->description }}</p>
-            </header>
-
-            <section class="space-y-16">
-                @foreach($project->modules as $module)
-                    @foreach($module->snippets as $snippet)
-                    <div id="snippet-{{ $snippet->id }}" class="scroll-mt-10">
-                        <h2 class="text-2xl font-bold text-white mb-4 border-l-4 border-yellow-500 pl-4">{{ $snippet->title }}</h2>
-                        
-                        <div class="bg-zinc-950 border border-zinc-800 rounded-lg overflow-hidden code-shadow mb-6">
-                            <div class="bg-zinc-900/50 px-4 py-2 border-b border-zinc-800 flex justify-between items-center text-[10px] text-zinc-500">
-                                <span>LANGUAGE: {{ strtoupper($snippet->language) }}</span>
-                                <span class="text-yellow-500/50 italic font-bold">LEXICODE_SECURE_VIEW</span>
-                            </div>
-                            <pre class="p-6 text-yellow-100 overflow-x-auto text-sm leading-relaxed"><code>{{ $snippet->code_block }}</code></pre>
-                        </div>
-
-                        <div class="bg-yellow-500/5 border border-yellow-500/20 p-6 rounded-lg">
-                            <h4 class="text-yellow-500 text-xs font-black uppercase mb-3 tracking-widest">// Human Explanation</h4>
-                            <p class="text-zinc-400 text-sm leading-relaxed italic">
-                                "{{ $snippet->human_explanation }}"
-                            </p>
-                        </div>
-                    </div>
-                    @endforeach
-                @endforeach
-            </section>
-        </main>
+    <div x-show="openAdd" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm" style="display: none;">
+        <div @click.away="openAdd = false" class="bg-zinc-950 border border-yellow-500/30 w-full max-w-sm p-8 rounded-2xl">
+            <h2 class="text-lg font-black text-yellow-400 uppercase tracking-tighter mb-6">Initialize_New_Module</h2>
+            <form action="{{ route('modules.store', $project->id) }}" method="POST">
+                @csrf
+                <input type="text" name="title" required placeholder="Module Title (e.g. Auth System)" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-yellow-500 mb-6">
+                <button type="submit" class="w-full bg-yellow-500 text-black font-black py-3 rounded-lg uppercase text-xs tracking-widest hover:bg-white transition-all">COMMIT_MODULE</button>
+            </form>
+        </div>
     </div>
 </body>
 </html>

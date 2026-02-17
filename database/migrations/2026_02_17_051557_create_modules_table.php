@@ -13,9 +13,11 @@ return new class extends Migration
 {
     Schema::create('modules', function (Blueprint $table) {
         $table->id();
-        $table->foreignId('project_id')->constrained()->onDelete('cascade'); // Masuk ke proyek mana
+        // Menghubungkan modul ke proyek tertentu
+        $table->foreignId('project_id')->constrained()->onDelete('cascade');
         $table->string('title');
-        $table->integer('order')->default(0); // Untuk mengurutkan menu
+        $table->string('slug');
+        $table->integer('order')->default(0); 
         $table->timestamps();
     });
 }

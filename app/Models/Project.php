@@ -10,8 +10,7 @@ class Project extends Model
     protected $fillable = ['user_id', 'name', 'slug', 'description', 'tech_stack'];
 
     // Relasi: Satu Project memiliki banyak Module
-    public function modules(): HasMany
-    {
-        return $this->hasMany(Module::class);
-    }
+    public function modules() {
+    return $this->hasMany(Module::class)->orderBy('order', 'asc');
+}
 }
