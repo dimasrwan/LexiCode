@@ -8,7 +8,9 @@ use Illuminate\Http\Request;
 
 class SnippetController extends Controller
 {
-    // Menyimpan snippet baru ke dalam modul
+    /**
+     * Menyimpan snippet baru ke dalam modul
+     */
     public function store(Request $request, Module $module)
     {
         $validated = $request->validate([
@@ -19,10 +21,13 @@ class SnippetController extends Controller
 
         $module->snippets()->create($validated);
 
-        return back()->with('success', 'Snippet added successfully!');
+        // Pesan 'success' ini akan ditangkap oleh Alpine.js di show.blade.php
+        return back()->with('success', 'New snippet added to ' . $module->title);
     }
 
-    // Memperbarui snippet yang sudah ada
+    /**
+     * Memperbarui snippet yang sudah ada
+     */
     public function update(Request $request, Snippet $snippet)
     {
         $validated = $request->validate([
@@ -33,13 +38,17 @@ class SnippetController extends Controller
 
         $snippet->update($validated);
 
-        return back()->with('success', 'Snippet updated successfully!');
+        return back()->with('success', 'Changes saved successfully!');
     }
 
-    // Menghapus snippet
+    /**
+     * Menghapus snippet
+     */
     public function destroy(Snippet $snippet)
     {
+        $title = $snippet->title;
         $snippet->delete();
-        return back()->with('success', 'Snippet deleted successfully!');
+        
+        return back()->with('success', 'Snippet "' . $title . '" has been deleted');
     }
 }

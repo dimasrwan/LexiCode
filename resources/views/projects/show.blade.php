@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <title>Lexicode</title>
+    <title>Lexicode | {{ str_replace('_', ' ', $project->name) }}</title>
     
     <link rel="icon" type="image/png" href="{{ asset('images/logo-lexicode.png') }}">
     
@@ -35,16 +34,48 @@
 </head>
 <body x-data="{ openAdd: false, search: '' }">
 
+    <div x-data="{ 
+            show: false, 
+            message: '', 
+            type: 'success' 
+        }" 
+        x-init="
+            @if(session('success'))
+                show = true; message = '{{ session('success') }}'; type = 'success';
+                setTimeout(() => show = false, 3000);
+            @endif
+            @if(session('error'))
+                show = true; message = '{{ session('error') }}'; type = 'error';
+                setTimeout(() => show = false, 3000);
+            @endif
+        "
+        x-show="show" 
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 translate-y-4"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 translate-y-0"
+        x-transition:leave-end="opacity-0 translate-y-4"
+        class="fixed bottom-8 right-8 z-[100]" x-cloak>
+        
+        <div :class="type === 'success' ? 'bg-zinc-900 border-green-500/50' : 'bg-zinc-900 border-red-500/50'" 
+             class="px-6 py-4 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center gap-4 border backdrop-blur-xl">
+            <div :class="type === 'success' ? 'bg-green-500' : 'bg-red-500'" class="w-2 h-2 rounded-full animate-pulse"></div>
+            <span class="text-white text-[10px] font-bold uppercase tracking-[0.2em]" x-text="message"></span>
+            <button @click="show = false" class="text-zinc-500 hover:text-white transition-colors ml-4 uppercase text-[9px] font-bold">Close</button>
+        </div>
+    </div>
+
     <nav class="border-b border-white/10 py-4 px-6 bg-zinc-950/50 backdrop-blur-md sticky top-0 z-50">
         <div class="max-w-7xl flex justify-between items-center mx-auto">
             <a href="{{ route('dashboard') }}" class="text-zinc-500 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors">Back to Dashboard</a>
-            <span class="text-yellow-500 font-black tracking-tight uppercase">{{ $project->name }}</span>
+            <span class="text-yellow-500 font-black tracking-tight uppercase">{{ str_replace('_', ' ', $project->name) }}</span>
         </div>
     </nav>
 
     <main class="max-w-4xl mx-auto py-12 px-6">
         <header class="mb-12 border-l-2 border-yellow-500 pl-6">
-            <h1 class="text-3xl font-black uppercase tracking-tighter">{{ $project->name }}</h1>
+            <h1 class="text-3xl font-black uppercase tracking-tighter">{{ str_replace('_', ' ', $project->name) }}</h1>
             <p class="text-zinc-500 text-sm mt-2">{{ $project->description }}</p>
             <div class="inline-block mt-4 bg-yellow-500 text-black text-[10px] font-bold px-2 py-0.5 rounded uppercase">
                 {{ $project->tech_stack }}
@@ -65,7 +96,7 @@
 
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-sm font-bold text-zinc-400 uppercase tracking-widest">Modules</h2>
-            <button @click="openAdd = true" class="text-xs bg-zinc-900 border border-zinc-800 hover:border-yellow-500 px-4 py-2 rounded text-zinc-400 hover:text-yellow-500 transition-all">
+            <button @click="openAdd = true" class="text-xs bg-zinc-900 border border-zinc-800 hover:border-yellow-500 px-4 py-2 rounded text-zinc-400 hover:text-yellow-500 transition-all uppercase font-bold tracking-tighter">
                 Add Module
             </button>
         </div>
@@ -81,7 +112,7 @@
                     <div @click="showSnippets = !showSnippets" class="p-4 flex justify-between items-center cursor-pointer hover:bg-zinc-800/50 transition-colors group">
                         <div class="flex items-center gap-4">
                             <span class="text-zinc-700 font-bold group-hover:text-yellow-500 transition-colors">0{{ $index + 1 }}</span>
-                            <span class="font-bold text-zinc-300 uppercase group-hover:text-white">{{ $module->title }}</span>
+                            <span class="font-bold text-zinc-300 uppercase group-hover:text-white">{{ str_replace('_', ' ', $module->title) }}</span>
                         </div>
                         <div class="flex items-center gap-4">
                             <button @click.stop="$dispatch('open-snippet-modal', { moduleId: {{ $module->id }}, moduleTitle: '{{ $module->title }}' })" 
@@ -91,10 +122,10 @@
 
                             <form action="{{ route('modules.destroy', $module->id) }}" method="POST" onsubmit="return confirm('Delete this module?')" class="m-0 inline-flex items-center">
                                 @csrf @method('DELETE')
-                                <button type="submit" @click.stop class="text-zinc-700 hover:text-red-500 transition-colors px-1">✕</button>
+                                <button type="submit" @click.stop class="text-zinc-700 hover:text-red-500 transition-colors px-1 text-lg leading-none">✕</button>
                             </form>
 
-                            <span class="text-zinc-600 transition-transform duration-300" :class="showSnippets ? 'rotate-180' : ''">▼</span>
+                            <span class="text-zinc-600 transition-transform duration-300 text-[10px]" :class="showSnippets ? 'rotate-180' : ''">▼</span>
                         </div>
                     </div>
 
@@ -110,10 +141,10 @@
                                         <div class="flex items-center gap-3 opacity-0 group-hover/snippet:opacity-100 transition-all">
                                             <button @click="$dispatch('open-edit-modal', { 
                                                 id: {{ $snippet->id }}, 
-                                                title: '{{ $snippet->title }}', 
+                                                title: '{{ addslashes($snippet->title) }}', 
                                                 language: '{{ $snippet->language }}', 
-                                                code: '{{ e(addslashes($snippet->code)) }}' 
-                                            })" class="text-[9px] font-bold text-zinc-500 hover:text-blue-400 transition-all uppercase">
+                                                code: `{{ addslashes($snippet->code) }}` 
+                                            })" class="text-[9px] font-bold text-zinc-500 hover:text-blue-400 transition-all uppercase tracking-widest">
                                                 Edit
                                             </button>
 
@@ -121,14 +152,14 @@
                                                 navigator.clipboard.writeText($refs.codeBlock{{ $snippet->id }}.innerText);
                                                 copied = true;
                                                 setTimeout(() => copied = false, 2000);
-                                            " class="text-[9px] font-bold text-zinc-500 hover:text-yellow-500 transition-all uppercase">
+                                            " class="text-[9px] font-bold text-zinc-500 hover:text-yellow-500 transition-all uppercase tracking-widest">
                                                 <span x-show="!copied">Copy</span>
                                                 <span x-show="copied" class="text-green-500">Copied!</span>
                                             </button>
 
                                             <form action="{{ route('snippets.destroy', $snippet->id) }}" method="POST" onsubmit="return confirm('Delete this snippet?')" class="inline-flex items-center m-0">
                                                 @csrf @method('DELETE')
-                                                <button type="submit" class="text-[9px] font-bold text-zinc-700 hover:text-red-500 transition-all uppercase">
+                                                <button type="submit" class="text-[9px] font-bold text-zinc-700 hover:text-red-500 transition-all uppercase tracking-widest">
                                                     Delete
                                                 </button>
                                             </form>
@@ -139,7 +170,9 @@
                                     </div>
                                 </div>
                             @empty
-                                <p class="text-[10px] text-zinc-700 italic py-2 px-1">No snippets found.</p>
+                                <div class="py-12 flex flex-col items-center justify-center opacity-20">
+                                    <p class="text-[10px] font-mono uppercase tracking-[0.2em]">No code recorded</p>
+                                </div>
                             @endforelse
                         </div>
                     </div>
@@ -153,7 +186,8 @@
     </main>
 
     <div x-show="openAdd" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm" x-cloak>
-        <div @click.away="openAdd = false" class="bg-zinc-950 border border-zinc-800 w-full max-w-sm p-8 rounded-2xl shadow-2xl">
+        <div @click.away="openAdd = false" class="bg-zinc-950 border border-zinc-800 w-full max-w-sm p-8 rounded-2xl shadow-2xl relative">
+            <button @click="openAdd = false" class="absolute top-4 right-4 text-zinc-500 hover:text-white text-lg">✕</button>
             <h2 class="text-lg font-bold text-white mb-6 uppercase tracking-tight">New Module</h2>
             <form action="{{ route('modules.store', $project->id) }}" method="POST">
                 @csrf
@@ -166,21 +200,31 @@
     <div x-data="{ open: false, moduleId: '', moduleTitle: '' }" 
          @open-snippet-modal.window="open = true; moduleId = $event.detail.moduleId; moduleTitle = $event.detail.moduleTitle"
          x-show="open" class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm" x-cloak>
-        <div @click.away="open = false" class="bg-zinc-950 border border-zinc-800 w-full max-w-2xl p-8 rounded-2xl shadow-2xl">
+        <div @click.away="open = false" class="bg-zinc-950 border border-zinc-800 w-full max-w-2xl p-8 rounded-2xl shadow-2xl relative">
+            <button @click="open = false" class="absolute top-4 right-4 text-zinc-500 hover:text-white text-lg">✕</button>
             <h2 class="text-xl font-bold text-white mb-6 uppercase tracking-tight">Add Code to <span x-text="moduleTitle" class="text-yellow-500"></span></h2>
             <form :action="'/module/' + moduleId + '/snippet'" method="POST" class="space-y-4">
                 @csrf
                 <div class="grid grid-cols-2 gap-4">
-                    <input type="text" name="title" required placeholder="Title" class="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-2.5 text-sm text-white focus:border-yellow-500 outline-none">
-                    <select name="language" class="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-2.5 text-sm text-white focus:border-yellow-500 outline-none uppercase font-bold">
-                        <option value="php">PHP</option>
-                        <option value="javascript">Javascript</option>
-                        <option value="sql">SQL</option>
-                        <option value="html">HTML</option>
-                        <option value="css">CSS</option>
-                    </select>
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Title</label>
+                        <input type="text" name="title" required placeholder="e.g. Database Config" class="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-2.5 text-sm text-white focus:border-yellow-500 outline-none">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Language</label>
+                        <select name="language" class="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-2.5 text-sm text-white focus:border-yellow-500 outline-none uppercase font-bold cursor-pointer">
+                            <option value="php">PHP</option>
+                            <option value="javascript">Javascript</option>
+                            <option value="sql">SQL</option>
+                            <option value="html">HTML</option>
+                            <option value="css">CSS</option>
+                        </select>
+                    </div>
                 </div>
-                <textarea name="code" rows="10" required placeholder="Paste your code here..." class="w-full bg-zinc-900 border border-zinc-800 rounded p-4 text-xs text-green-400 font-mono focus:border-yellow-500 focus:outline-none transition-all"></textarea>
+                <div class="space-y-1">
+                    <label class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Code</label>
+                    <textarea name="code" rows="10" required placeholder="Paste your code here..." class="w-full bg-zinc-900 border border-zinc-800 rounded p-4 text-xs text-green-400 font-mono focus:border-yellow-500 focus:outline-none transition-all"></textarea>
+                </div>
                 <button type="submit" class="w-full bg-yellow-500 text-black font-bold py-4 rounded uppercase text-xs tracking-widest hover:bg-white transition-all">Save Snippet</button>
             </form>
         </div>
@@ -189,21 +233,31 @@
     <div x-data="{ open: false, id: '', title: '', language: '', code: '' }" 
          @open-edit-modal.window="open = true; id = $event.detail.id; title = $event.detail.title; language = $event.detail.language; code = $event.detail.code"
          x-show="open" class="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md" x-cloak>
-        <div @click.away="open = false" class="bg-zinc-950 border border-zinc-800 w-full max-w-2xl p-8 rounded-2xl shadow-2xl">
+        <div @click.away="open = false" class="bg-zinc-950 border border-zinc-800 w-full max-w-2xl p-8 rounded-2xl shadow-2xl relative">
+            <button @click="open = false" class="absolute top-4 right-4 text-zinc-500 hover:text-white text-lg">✕</button>
             <h2 class="text-xl font-bold text-white mb-6 uppercase tracking-tight">Edit Snippet</h2>
             <form :action="'/snippet/' + id" method="POST" class="space-y-4">
                 @csrf @method('PATCH')
                 <div class="grid grid-cols-2 gap-4">
-                    <input type="text" name="title" x-model="title" required class="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-2.5 text-sm text-white focus:border-yellow-500 outline-none">
-                    <select name="language" x-model="language" class="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-2.5 text-sm text-white focus:border-yellow-500 outline-none uppercase font-bold">
-                        <option value="php">PHP</option>
-                        <option value="javascript">Javascript</option>
-                        <option value="sql">SQL</option>
-                        <option value="html">HTML</option>
-                        <option value="css">CSS</option>
-                    </select>
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Title</label>
+                        <input type="text" name="title" x-model="title" required class="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-2.5 text-sm text-white focus:border-yellow-500 outline-none">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Language</label>
+                        <select name="language" x-model="language" class="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-2.5 text-sm text-white focus:border-yellow-500 outline-none uppercase font-bold cursor-pointer">
+                            <option value="php">PHP</option>
+                            <option value="javascript">Javascript</option>
+                            <option value="sql">SQL</option>
+                            <option value="html">HTML</option>
+                            <option value="css">CSS</option>
+                        </select>
+                    </div>
                 </div>
-                <textarea name="code" x-model="code" rows="10" required class="w-full bg-zinc-900 border border-zinc-800 rounded p-4 text-xs text-blue-300 font-mono focus:border-yellow-500 focus:outline-none transition-all"></textarea>
+                <div class="space-y-1">
+                    <label class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Update Code</label>
+                    <textarea name="code" x-model="code" rows="10" required class="w-full bg-zinc-900 border border-zinc-800 rounded p-4 text-xs text-blue-300 font-mono focus:border-yellow-500 focus:outline-none transition-all"></textarea>
+                </div>
                 <button type="submit" class="w-full bg-blue-600 text-white font-bold py-4 rounded uppercase text-xs tracking-widest hover:bg-blue-500 transition-all">Update Snippet</button>
             </form>
         </div>
@@ -213,9 +267,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
-    
-    <script>
-        document.addEventListener('alpine:initialized', () => { Prism.highlightAll(); });
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script> <script>
+        document.addEventListener('alpine:initialized', () => { 
+            Prism.highlightAll(); 
+        });
     </script>
 </body>
 </html>
