@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lexicode | {{ str_replace('_', ' ', $project->name) }}</title>
+    <title>Lexicode</title>
     
     <link rel="icon" type="image/png" href="{{ asset('images/logo-lexicode.png') }}">
     
@@ -70,7 +70,7 @@
         </div>
     </nav>
 
-    <main class="max-w-4xl mx-auto py-12 px-6">
+    <main class="max-w-6xl mx-auto py-12 px-6">
         <header class="mb-12 border-l-2 border-yellow-500 pl-6">
             <h1 class="text-3xl font-black uppercase tracking-tighter">{{ str_replace('_', ' ', $project->name) }}</h1>
             <p class="text-zinc-500 text-sm mt-2">{{ $project->description }}</p>
@@ -78,129 +78,163 @@
                 {{ $project->tech_stack }}
             </div>
 
-            <div class="mt-10 relative">
+            <div class="mt-10 relative max-w-2xl">
                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <span class="text-zinc-600 text-[10px] font-bold text-yellow-500/50">SEARCH</span>
                 </div>
                 <input 
                     type="text" 
                     x-model="search"
-                    placeholder="Filter modules by title..." 
+                    placeholder="Filter by title or language (e.g. php, javascript)..." 
                     class="w-full bg-zinc-900/40 border border-zinc-800 rounded-lg py-3 pl-20 pr-4 text-xs font-mono text-zinc-300 focus:outline-none focus:border-yellow-500/50 transition-all shadow-inner"
                 >
             </div>
         </header>
 
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-sm font-bold text-zinc-400 uppercase tracking-widest">Modules</h2>
-            <button @click="openAdd = true" class="text-xs bg-zinc-900 border border-zinc-800 hover:border-yellow-500 px-4 py-2 rounded text-zinc-400 hover:text-yellow-500 transition-all uppercase font-bold tracking-tighter">
-                Add Module
-            </button>
-        </div>
-
-        <div class="space-y-4">
-            @forelse($project->modules as $index => $module)
-                <div 
-                    x-data="{ showSnippets: false }" 
-                    x-show="search === '' || '{{ strtolower($module->title) }}'.includes(search.toLowerCase())"
-                    x-transition.opacity
-                    class="bg-zinc-900/30 border border-zinc-800 rounded-xl overflow-hidden transition-all"
-                >
-                    <div @click="showSnippets = !showSnippets" class="p-4 flex justify-between items-center cursor-pointer hover:bg-zinc-800/50 transition-colors group">
-                        <div class="flex items-center gap-4">
-                            <span class="text-zinc-700 font-bold group-hover:text-yellow-500 transition-colors">0{{ $index + 1 }}</span>
-                            <span class="font-bold text-zinc-300 uppercase group-hover:text-white">{{ str_replace('_', ' ', $module->title) }}</span>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <button @click.stop="$dispatch('open-snippet-modal', { moduleId: {{ $module->id }}, moduleTitle: '{{ $module->title }}' })" 
-                                    class="text-[9px] font-bold bg-yellow-500/10 text-yellow-500 border border-yellow-500/30 px-2 py-1 rounded hover:bg-yellow-500 hover:text-black transition-all uppercase">
-                                Add Code
-                            </button>
-
-                            <form action="{{ route('modules.destroy', $module->id) }}" method="POST" onsubmit="return confirm('Delete this module?')" class="m-0 inline-flex items-center">
-                                @csrf @method('DELETE')
-                                <button type="submit" @click.stop class="text-zinc-700 hover:text-red-500 transition-colors px-1 text-lg leading-none">✕</button>
-                            </form>
-
-                            <span class="text-zinc-600 transition-transform duration-300 text-[10px]" :class="showSnippets ? 'rotate-180' : ''">▼</span>
-                        </div>
+        <div class="flex flex-col md:flex-row gap-12">
+            
+            <aside class="hidden md:block w-56 shrink-0 text-white">
+                <div class="sticky top-28 space-y-10">
+                    <div>
+                        <h3 class="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] mb-4">Quick Jump</h3>
+                        <nav class="space-y-3">
+                            @foreach($project->modules as $index => $module)
+                                <a href="#module-{{ $module->id }}" 
+                                   class="block text-[11px] font-bold text-zinc-500 hover:text-yellow-500 transition-colors uppercase truncate group">
+                                   <span class="text-zinc-800 mr-2 group-hover:text-yellow-500/50">0{{ $index + 1 }}</span> {{ $module->title }}
+                                </a>
+                            @endforeach
+                        </nav>
                     </div>
 
-                    <div x-show="showSnippets" x-collapse x-cloak>
-                        <div class="p-4 border-t border-zinc-800 bg-black/40 space-y-12">
-                            @forelse($module->snippets as $snippet)
-                                <div x-data="{ copied: false }" class="space-y-2 group/snippet">
-                                    <div class="flex justify-between items-center px-1">
-                                        <h4 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                                            <span class="px-1.5 py-0.5 rounded-[4px] text-[8px] font-black border {{ 
-                                                $snippet->language == 'php' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 
-                                                ($snippet->language == 'javascript' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' : 
-                                                ($snippet->language == 'sql' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-zinc-800 text-zinc-400 border-zinc-700'))
-                                            }}">
-                                                {{ strtoupper($snippet->language) }}
-                                            </span>
-                                            // {{ $snippet->title }}
-                                        </h4>
-                                        
-                                        <div class="flex items-center gap-3 opacity-0 group-hover/snippet:opacity-100 transition-all">
-                                            <button @click="exportSnippet($refs.capture{{ $snippet->id }}, '{{ $snippet->title }}')" 
-                                                    class="text-[9px] font-bold text-zinc-500 hover:text-emerald-500 transition-all uppercase tracking-widest">
-                                                Download PNG
-                                            </button>
+                    <div x-show="search !== ''" x-cloak class="p-4 bg-yellow-500/5 border border-yellow-500/20 rounded-xl">
+                        <p class="text-[9px] text-yellow-500/70 font-bold uppercase tracking-widest">Active Filter</p>
+                        <p class="text-xs font-bold text-white mt-1 break-all" x-text="search"></p>
+                        <button @click="search = ''" class="text-[9px] text-zinc-500 hover:text-white mt-3 flex items-center gap-1 uppercase font-bold">
+                            <span>✕</span> Clear Filter
+                        </button>
+                    </div>
 
-                                            <button @click="$dispatch('open-edit-modal', { 
-                                                id: {{ $snippet->id }}, 
-                                                title: '{{ addslashes($snippet->title) }}', 
-                                                language: '{{ $snippet->language }}', 
-                                                code: `{{ addslashes($snippet->code) }}` 
-                                            })" class="text-[9px] font-bold text-zinc-500 hover:text-blue-400 transition-all uppercase tracking-widest">
-                                                Edit
-                                            </button>
-
-                                            <button @click="
-                                                navigator.clipboard.writeText($refs.codeBlock{{ $snippet->id }}.innerText);
-                                                copied = true;
-                                                setTimeout(() => copied = false, 2000);
-                                            " class="text-[9px] font-bold text-zinc-500 hover:text-yellow-500 transition-all uppercase tracking-widest">
-                                                <span x-show="!copied">Copy</span>
-                                                <span x-show="copied" class="text-green-500">Copied!</span>
-                                            </button>
-
-                                            <form action="{{ route('snippets.destroy', $snippet->id) }}" method="POST" onsubmit="return confirm('Delete this snippet?')" class="inline-flex items-center m-0">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="text-[9px] font-bold text-zinc-700 hover:text-red-500 transition-all uppercase tracking-widest">
-                                                    Delete
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-
-                                    <div x-ref="capture{{ $snippet->id }}" class="bg-black p-6 rounded-xl border border-zinc-900">
-                                        <div class="flex items-center gap-1.5 mb-4 px-1">
-                                            <div class="w-2.5 h-2.5 rounded-full bg-[#ff5f56]"></div>
-                                            <div class="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]"></div>
-                                            <div class="w-2.5 h-2.5 rounded-full bg-[#27c93f]"></div>
-                                            <span class="text-[9px] text-zinc-600 font-mono ml-2 uppercase tracking-tighter">{{ $snippet->title }}</span>
-                                        </div>
-
-                                        <div class="rounded-lg overflow-hidden border border-zinc-800/50 shadow-2xl">
-                                            <pre class="line-numbers"><code x-ref="codeBlock{{ $snippet->id }}" class="language-{{ $snippet->language }}">{{ $snippet->code }}</code></pre>
-                                        </div>
-                                    </div>
-                                </div>
-                            @empty
-                                <div class="py-12 flex flex-col items-center justify-center opacity-20">
-                                    <p class="text-[10px] font-mono uppercase tracking-[0.2em]">No code recorded</p>
-                                </div>
-                            @endforelse
-                        </div>
+                    <div class="pt-6 border-t border-white/5">
+                        <button @click="openAdd = true" class="w-full text-left text-[10px] font-black text-yellow-500 hover:text-white transition-colors uppercase tracking-widest">
+                            + New Module
+                        </button>
                     </div>
                 </div>
-            @empty
-                <div class="border-2 border-dashed border-zinc-900 p-16 text-center rounded-2xl text-zinc-600 italic text-sm">
-                    No modules found.
+            </aside>
+
+            <div class="flex-1 min-w-0">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-sm font-bold text-zinc-400 uppercase tracking-widest">Project Modules</h2>
                 </div>
-            @endforelse
+
+                <div class="space-y-6">
+                    @forelse($project->modules as $index => $module)
+                        <div 
+                            x-data="{ showSnippets: true }" 
+                            id="module-{{ $module->id }}"
+                            x-show="search === '' || '{{ strtolower($module->title) }}'.includes(search.toLowerCase()) || '{{ strtolower(implode(' ', $module->snippets->pluck('language')->toArray())) }}'.includes(search.toLowerCase())"
+                            x-transition.opacity
+                            class="bg-zinc-900/30 border border-zinc-800 rounded-2xl overflow-hidden transition-all scroll-mt-28"
+                        >
+                            <div @click="showSnippets = !showSnippets" class="p-5 flex justify-between items-center cursor-pointer hover:bg-zinc-800/50 transition-colors group">
+                                <div class="flex items-center gap-4">
+                                    <span class="text-zinc-700 font-bold group-hover:text-yellow-500 transition-colors">0{{ $index + 1 }}</span>
+                                    <span class="font-bold text-zinc-300 uppercase group-hover:text-white tracking-tight">{{ str_replace('_', ' ', $module->title) }}</span>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <button @click.stop="$dispatch('open-snippet-modal', { moduleId: {{ $module->id }}, moduleTitle: '{{ $module->title }}' })" 
+                                            class="text-[9px] font-bold bg-yellow-500/10 text-yellow-500 border border-yellow-500/30 px-3 py-1.5 rounded hover:bg-yellow-500 hover:text-black transition-all uppercase">
+                                        Add Code
+                                    </button>
+
+                                    <form action="{{ route('modules.destroy', $module->id) }}" method="POST" onsubmit="return confirm('Delete this module?')" class="m-0 inline-flex items-center">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" @click.stop class="text-zinc-700 hover:text-red-500 transition-colors px-1 text-lg leading-none">✕</button>
+                                    </form>
+
+                                    <span class="text-zinc-600 transition-transform duration-300 text-[10px]" :class="showSnippets ? 'rotate-180' : ''">▼</span>
+                                </div>
+                            </div>
+
+                            <div x-show="showSnippets" x-collapse x-cloak>
+                                <div class="p-6 border-t border-zinc-800/50 bg-black/20 space-y-16">
+                                    @forelse($module->snippets as $snippet)
+                                        <div x-data="{ copied: false }" class="space-y-4 group/snippet">
+                                            <div class="flex justify-between items-center px-1">
+                                                <h4 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-3">
+                                                    <button @click="search = '{{ $snippet->language }}'; window.scrollTo({top: 0, behavior: 'smooth'})" 
+                                                            class="px-2 py-1 rounded-[4px] text-[8px] font-black border transition-all hover:scale-110 {{ 
+                                                                $snippet->language == 'php' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 
+                                                                ($snippet->language == 'javascript' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' : 
+                                                                ($snippet->language == 'sql' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-zinc-800 text-zinc-400 border-zinc-700'))
+                                                            }}">
+                                                        {{ strtoupper($snippet->language) }}
+                                                    </button>
+                                                    <span class="text-zinc-400">// {{ $snippet->title }}</span>
+                                                </h4>
+                                                
+                                                <div class="flex items-center gap-4 opacity-0 group-hover/snippet:opacity-100 transition-all">
+                                                    <button @click="exportSnippet($refs.capture{{ $snippet->id }}, '{{ $snippet->title }}')" 
+                                                            class="text-[9px] font-bold text-zinc-600 hover:text-emerald-500 transition-all uppercase tracking-widest">
+                                                        PNG
+                                                    </button>
+
+                                                    <button @click="$dispatch('open-edit-modal', { 
+                                                        id: {{ $snippet->id }}, 
+                                                        title: '{{ addslashes($snippet->title) }}', 
+                                                        language: '{{ $snippet->language }}', 
+                                                        code: `{{ addslashes($snippet->code) }}` 
+                                                    })" class="text-[9px] font-bold text-zinc-600 hover:text-blue-400 transition-all uppercase tracking-widest">
+                                                        Edit
+                                                    </button>
+
+                                                    <button @click="
+                                                        navigator.clipboard.writeText($refs.codeBlock{{ $snippet->id }}.innerText);
+                                                        copied = true;
+                                                        setTimeout(() => copied = false, 2000);
+                                                    " class="text-[9px] font-bold text-zinc-600 hover:text-yellow-500 transition-all uppercase tracking-widest">
+                                                        <span x-show="!copied">Copy</span>
+                                                        <span x-show="copied" class="text-green-500">Copied!</span>
+                                                    </button>
+
+                                                    <form action="{{ route('snippets.destroy', $snippet->id) }}" method="POST" onsubmit="return confirm('Delete this snippet?')" class="inline-flex items-center m-0">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit" class="text-[9px] font-bold text-zinc-800 hover:text-red-500 transition-all uppercase tracking-widest">
+                                                            Delete
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+
+                                            <div x-ref="capture{{ $snippet->id }}" class="bg-black p-6 rounded-2xl border border-zinc-900 shadow-2xl">
+                                                <div class="flex items-center gap-1.5 mb-5 px-1">
+                                                    <div class="w-2.5 h-2.5 rounded-full bg-[#ff5f56]"></div>
+                                                    <div class="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]"></div>
+                                                    <div class="w-2.5 h-2.5 rounded-full bg-[#27c93f]"></div>
+                                                    <span class="text-[9px] text-zinc-600 font-mono ml-3 uppercase tracking-[0.2em]">{{ $snippet->title }}</span>
+                                                </div>
+
+                                                <div class="rounded-lg overflow-hidden border border-zinc-800/50">
+                                                    <pre class="line-numbers"><code x-ref="codeBlock{{ $snippet->id }}" class="language-{{ $snippet->language }}">{{ $snippet->code }}</code></pre>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @empty
+                                        <div class="py-10 flex flex-col items-center justify-center opacity-20">
+                                            <p class="text-[10px] font-mono uppercase tracking-[0.2em]">No code snippets in this module</p>
+                                        </div>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="border-2 border-dashed border-zinc-900 p-20 text-center rounded-3xl text-zinc-700 italic text-sm">
+                            Empty project. Start by adding a module.
+                        </div>
+                    @endforelse
+                </div>
+            </div>
         </div>
     </main>
 
@@ -210,9 +244,9 @@
         x-show="show"
         x-transition.opacity
         @click="window.scrollTo({top: 0, behavior: 'smooth'})"
-        class="fixed bottom-24 right-8 p-3 bg-zinc-900 border border-zinc-800 rounded-full text-yellow-500 hover:bg-yellow-500 hover:text-black transition-all shadow-2xl z-40"
+        class="fixed bottom-10 right-10 p-4 bg-zinc-900 border border-zinc-800 rounded-full text-yellow-500 hover:bg-yellow-500 hover:text-black transition-all shadow-2xl z-40"
     >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
         </svg>
     </button>
@@ -303,13 +337,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script> 
     
     <script>
-        // Fungsi Export PNG
+        // PNG Export
         function exportSnippet(element, filename) {
             document.body.style.cursor = 'wait';
             
             html2canvas(element, {
                 backgroundColor: '#000000',
-                scale: 3, // High Resolution 3x
+                scale: 3,
                 logging: false,
                 useCORS: true,
                 allowTaint: true
