@@ -15,7 +15,7 @@
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-        body { font-family: 'JetBrains+Mono', monospace; background: black; color: white; }
+        body { font-family: 'JetBrains+Mono', monospace; background: black; color: white; scroll-behavior: smooth; }
         [x-cloak] { display: none !important; }
         
         pre::-webkit-scrollbar { height: 4px; }
@@ -134,8 +134,15 @@
                             @forelse($module->snippets as $snippet)
                                 <div x-data="{ copied: false }" class="space-y-2 group/snippet">
                                     <div class="flex justify-between items-center px-1">
-                                        <h4 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-                                            // {{ $snippet->title }} <span class="text-yellow-500/50">({{ $snippet->language }})</span>
+                                        <h4 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                                            <span class="px-1.5 py-0.5 rounded-[4px] text-[8px] font-black border {{ 
+                                                $snippet->language == 'php' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 
+                                                ($snippet->language == 'javascript' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' : 
+                                                ($snippet->language == 'sql' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-zinc-800 text-zinc-400 border-zinc-700'))
+                                            }}">
+                                                {{ strtoupper($snippet->language) }}
+                                            </span>
+                                            // {{ $snippet->title }}
                                         </h4>
                                         
                                         <div class="flex items-center gap-3 opacity-0 group-hover/snippet:opacity-100 transition-all">
@@ -184,6 +191,19 @@
             @endforelse
         </div>
     </main>
+
+    <button 
+        x-data="{ show: false }" 
+        @scroll.window="show = (window.pageYOffset > 500)"
+        x-show="show"
+        x-transition.opacity
+        @click="window.scrollTo({top: 0, behavior: 'smooth'})"
+        class="fixed bottom-24 right-8 p-3 bg-zinc-900 border border-zinc-800 rounded-full text-yellow-500 hover:bg-yellow-500 hover:text-black transition-all shadow-2xl z-40"
+    >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+        </svg>
+    </button>
 
     <div x-show="openAdd" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm" x-cloak>
         <div @click.away="openAdd = false" class="bg-zinc-950 border border-zinc-800 w-full max-w-sm p-8 rounded-2xl shadow-2xl relative">
@@ -268,7 +288,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script> <script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script> 
+    
+    <script>
         document.addEventListener('alpine:initialized', () => { 
             Prism.highlightAll(); 
         });
