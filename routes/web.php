@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SnippetController;
 
 // Halaman Utama: Menampilkan daftar proyek LexiCode
 Route::get('/', [ProjectController::class, 'index'])->name('dashboard');
@@ -15,6 +16,7 @@ Route::post('/project/{id}/module', [ProjectController::class, 'storeModule'])->
 Route::post('/module/{id}/snippet', [ProjectController::class, 'storeSnippet'])->name('snippets.store');
 Route::delete('/module/{module}', [ProjectController::class, 'destroyModule'])->name('modules.destroy');
 Route::delete('/snippet/{snippet}', [ProjectController::class, 'destroySnippet'])->name('snippets.destroy');
+Route::patch('/snippet/{snippet}', [SnippetController::class, 'update'])->name('snippets.update');
 
 // Route untuk fitur Profile (Bawaan Laravel Breeze/Starter Kit)
 Route::middleware('auth')->group(function () {
