@@ -10,6 +10,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     
@@ -34,11 +35,7 @@
 </head>
 <body x-data="{ openAdd: false, search: '' }">
 
-    <div x-data="{ 
-            show: false, 
-            message: '', 
-            type: 'success' 
-        }" 
+    <div x-data="{ show: false, message: '', type: 'success' }" 
         x-init="
             @if(session('success'))
                 show = true; message = '{{ session('success') }}'; type = 'success';
@@ -130,7 +127,7 @@
                     </div>
 
                     <div x-show="showSnippets" x-collapse x-cloak>
-                        <div class="p-4 border-t border-zinc-800 bg-black/40 space-y-8">
+                        <div class="p-4 border-t border-zinc-800 bg-black/40 space-y-12">
                             @forelse($module->snippets as $snippet)
                                 <div x-data="{ copied: false }" class="space-y-2 group/snippet">
                                     <div class="flex justify-between items-center px-1">
@@ -146,6 +143,11 @@
                                         </h4>
                                         
                                         <div class="flex items-center gap-3 opacity-0 group-hover/snippet:opacity-100 transition-all">
+                                            <button @click="exportSnippet($refs.capture{{ $snippet->id }}, '{{ $snippet->title }}')" 
+                                                    class="text-[9px] font-bold text-zinc-500 hover:text-emerald-500 transition-all uppercase tracking-widest">
+                                                Download PNG
+                                            </button>
+
                                             <button @click="$dispatch('open-edit-modal', { 
                                                 id: {{ $snippet->id }}, 
                                                 title: '{{ addslashes($snippet->title) }}', 
@@ -172,8 +174,18 @@
                                             </form>
                                         </div>
                                     </div>
-                                    <div class="rounded-lg overflow-hidden border border-zinc-800">
-                                        <pre class="line-numbers"><code x-ref="codeBlock{{ $snippet->id }}" class="language-{{ $snippet->language }}">{{ $snippet->code }}</code></pre>
+
+                                    <div x-ref="capture{{ $snippet->id }}" class="bg-black p-6 rounded-xl border border-zinc-900">
+                                        <div class="flex items-center gap-1.5 mb-4 px-1">
+                                            <div class="w-2.5 h-2.5 rounded-full bg-[#ff5f56]"></div>
+                                            <div class="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]"></div>
+                                            <div class="w-2.5 h-2.5 rounded-full bg-[#27c93f]"></div>
+                                            <span class="text-[9px] text-zinc-600 font-mono ml-2 uppercase tracking-tighter">{{ $snippet->title }}</span>
+                                        </div>
+
+                                        <div class="rounded-lg overflow-hidden border border-zinc-800/50 shadow-2xl">
+                                            <pre class="line-numbers"><code x-ref="codeBlock{{ $snippet->id }}" class="language-{{ $snippet->language }}">{{ $snippet->code }}</code></pre>
+                                        </div>
                                     </div>
                                 </div>
                             @empty
@@ -291,6 +303,26 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script> 
     
     <script>
+        // Fungsi Export PNG
+        function exportSnippet(element, filename) {
+            document.body.style.cursor = 'wait';
+            
+            html2canvas(element, {
+                backgroundColor: '#000000',
+                scale: 3, // High Resolution 3x
+                logging: false,
+                useCORS: true,
+                allowTaint: true
+            }).then(canvas => {
+                const link = document.createElement('a');
+                const cleanName = filename.toLowerCase().replace(/[^a-z0-9]/g, '-');
+                link.download = `Lexicode-${cleanName}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+                document.body.style.cursor = 'default';
+            });
+        }
+
         document.addEventListener('alpine:initialized', () => { 
             Prism.highlightAll(); 
         });
