@@ -9,22 +9,34 @@
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
         body { font-family: 'JetBrains+Mono', monospace; background: black; color: white; }
         [x-cloak] { display: none !important; }
         
-        /* Custom scrollbar untuk area kode */
+        /* Custom scrollbar area kode */
         pre::-webkit-scrollbar { height: 4px; }
         pre::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
         pre::-webkit-scrollbar-thumb:hover { background: #eab308; }
+
+        /* Override Prism agar match dengan UI */
+        pre[class*="language-"] {
+            background: #09090b !important; /* zinc-950 */
+            border: 1px solid #27272a !important; /* zinc-800 */
+            margin: 0 !important;
+            padding: 1.25rem !important;
+            font-size: 0.75rem !important;
+            border-radius: 0.5rem;
+        }
     </style>
 </head>
 <body x-data="{ openAdd: false }">
 
     <nav class="border-b border-yellow-500/20 py-4 px-6 bg-zinc-950/50 backdrop-blur-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <a href="{{ route('dashboard') }}" class="text-zinc-500 hover:text-yellow-400 text-xs font-bold uppercase tracking-widest"><< BACK_TO_DASHBOARD</a>
+            <a href="{{ route('dashboard') }}" class="text-zinc-500 hover:text-yellow-400 text-xs font-bold uppercase tracking-widest transition-colors"><< BACK_TO_DASHBOARD</a>
             <span class="text-yellow-500 font-black tracking-tighter uppercase">{{ $project->name }}</span>
         </div>
     </nav>
@@ -33,7 +45,9 @@
         <header class="mb-12 border-l-4 border-yellow-500 pl-6">
             <h1 class="text-3xl font-black uppercase tracking-tighter">{{ $project->name }}<span class="text-yellow-500">_</span></h1>
             <p class="text-zinc-500 text-sm mt-2">{{ $project->description }}</p>
-            <div class="inline-block mt-4 bg-yellow-500 text-black text-[10px] font-black px-2 py-0.5 rounded uppercase">{{ $project->tech_stack }}</div>
+            <div class="inline-block mt-4 bg-yellow-500 text-black text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter">
+                {{ $project->tech_stack }}
+            </div>
         </header>
 
         <div class="flex justify-between items-center mb-6">
@@ -57,24 +71,54 @@
                                     class="text-[9px] font-black bg-yellow-500/10 text-yellow-500 border border-yellow-500/30 px-2 py-1 rounded hover:bg-yellow-500 hover:text-black transition-all uppercase tracking-tighter">
                                 + Add_Code
                             </button>
+
+                            <form action="{{ route('modules.destroy', $module->id) }}" method="POST" onsubmit="return confirm('ERASE_MODULE: This will delete all snippets inside. Continue?')" class="m-0 flex items-center">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" @click.stop class="text-zinc-700 hover:text-red-500 transition-colors px-1" title="Delete Module">
+                                    ✕
+                                </button>
+                            </form>
+
                             <span class="text-zinc-600 transition-transform duration-300" :class="showSnippets ? 'rotate-180' : ''">▼</span>
                         </div>
                     </div>
 
                     <div x-show="showSnippets" x-collapse x-cloak>
-                        <div class="p-4 border-t border-zinc-800 bg-black/40 space-y-6">
+                        <div class="p-4 border-t border-zinc-800 bg-black/40 space-y-8">
                             @forelse($module->snippets as $snippet)
-                                <div class="space-y-2 group/snippet">
-                                    <div class="flex justify-between items-center">
+                                <div x-data="{ copied: false }" class="space-y-2 group/snippet">
+                                    <div class="flex justify-between items-center px-1">
                                         <h4 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
                                             // {{ $snippet->title }} <span class="text-yellow-500/50">({{ $snippet->language }})</span>
                                         </h4>
-                                        <button class="opacity-0 group-hover/snippet:opacity-100 text-[9px] text-zinc-500 hover:text-yellow-500 transition-all uppercase">[Copy]</button>
+                                        
+                                        <div class="flex items-center gap-3 opacity-0 group-hover/snippet:opacity-100 transition-all">
+                                            <button @click="
+                                                navigator.clipboard.writeText($refs.codeBlock{{ $snippet->id }}.innerText);
+                                                copied = true;
+                                                setTimeout(() => copied = false, 2000);
+                                            " class="text-[9px] font-black text-zinc-500 hover:text-yellow-500 transition-all uppercase tracking-widest">
+                                                <span x-show="!copied">[Copy_Code]</span>
+                                                <span x-show="copied" class="text-green-500 animate-pulse">[Copied!]</span>
+                                            </button>
+
+                                            <form action="{{ route('snippets.destroy', $snippet->id) }}" method="POST" onsubmit="return confirm('PURGE_SNIPPET: Erase this code forever?')" class="inline-flex items-center m-0">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-[9px] font-black text-zinc-700 hover:text-red-500 transition-all uppercase tracking-widest">
+                                                    [Erase_X]
+                                                </button>
+                                            </form>
+                                        </div>
                                     </div>
-                                    <pre class="bg-zinc-950 p-4 rounded border border-zinc-800 text-xs text-green-500 overflow-x-auto font-mono leading-relaxed"><code>{{ $snippet->code }}</code></pre>
+                                    
+                                    <div class="rounded-lg overflow-hidden border border-zinc-800">
+                                        <pre class="line-numbers"><code x-ref="codeBlock{{ $snippet->id }}" class="language-{{ $snippet->language }}">{{ $snippet->code }}</code></pre>
+                                    </div>
                                 </div>
                             @empty
-                                <p class="text-[10px] text-zinc-700 italic py-2">No snippets loaded in this module. Ready for injection.</p>
+                                <p class="text-[10px] text-zinc-700 italic py-2 px-1">No snippets loaded. System idle.</p>
                             @endforelse
                         </div>
                     </div>
@@ -138,5 +182,16 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup-bash.min.js"></script>
+    
+    <script>
+        document.addEventListener('alpine:initialized', () => {
+            Prism.highlightAll();
+        });
+    </script>
 </body>
 </html>

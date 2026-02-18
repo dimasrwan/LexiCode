@@ -87,4 +87,20 @@ class ProjectController extends Controller
 
         return redirect()->route('dashboard')->with('success', 'PROJECT_DELETED_FROM_SYSTEM');
     }
+
+    public function destroySnippet($id)
+{
+    $snippet = \App\Models\Snippet::findOrFail($id);
+    $snippet->delete();
+
+    return back()->with('success', 'Snippet purged successfully.');
+}
+
+public function destroyModule($id)
+{
+    $module = \App\Models\Module::findOrFail($id);
+    $module->delete(); // Karena 'cascade' di migration, snippet di dalamnya akan ikut terhapus
+
+    return back()->with('success', 'Module and all snippets purged.');
+}
 }
