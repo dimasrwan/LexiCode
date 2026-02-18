@@ -8,15 +8,20 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Module extends Model
 {
-    protected $fillable = ['project_id', 'title', 'order'];
+    // Tambahkan 'slug' ke dalam fillable
+    protected $fillable = ['project_id', 'title', 'slug', 'order'];
 
-    // Relasi balik: Module ini milik Project apa?
+    /**
+     * Relasi balik: Module ini milik Project apa?
+     */
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
     }
 
-    // Relasi: Satu Module memiliki banyak Snippet
+    /**
+     * Relasi: Satu Module memiliki banyak Snippet
+     */
     public function snippets(): HasMany
     {
         return $this->hasMany(Snippet::class);

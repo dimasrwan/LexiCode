@@ -12,6 +12,7 @@ Route::delete('/project/{id}', [ProjectController::class, 'destroy'])->name('pro
 Route::put('/project/{id}', [ProjectController::class, 'update'])->name('projects.update');
 Route::get('/project/{slug}', [ProjectController::class, 'show'])->name('projects.show');
 Route::post('/project/{id}/module', [ProjectController::class, 'storeModule'])->name('modules.store');
+Route::post('/module/{id}/snippet', [ProjectController::class, 'storeSnippet'])->name('snippets.store');
 
 // Route untuk fitur Profile (Bawaan Laravel Breeze/Starter Kit)
 Route::middleware('auth')->group(function () {

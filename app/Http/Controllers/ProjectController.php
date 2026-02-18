@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
-use App\Models\Module; // TAMBAHKAN INI
+use App\Models\Module;
+use App\Models\Snippet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -33,6 +34,24 @@ class ProjectController extends Controller
 
         return redirect()->route('dashboard')->with('success', 'Project initialized successfully!');
     }
+
+    public function storeSnippet(Request $request, $moduleId)
+{
+    $request->validate([
+        'title' => 'required',
+        'code' => 'required',
+        'language' => 'required'
+    ]);
+
+    Snippet::create([
+        'module_id' => $moduleId,
+        'title' => $request->title,
+        'code' => $request->code,
+        'language' => $request->language,
+    ]);
+
+    return back()->with('success', 'SNIPPET_LOADED_TO_MODULE');
+}
 
     public function show($slug)
     {

@@ -12,16 +12,12 @@ class DatabaseSeeder extends Seeder
      * Seed the application's database.
      */
     public function run(): void
-    {
-        // 1. Membuat User Admin Utama
-        // Kita gunakan updateOrCreate agar tidak duplikat jika seeder dijalankan ulang
-        User::updateOrCreate(
-            ['email' => 'admin@lexicode.test'],
-            [
-                'name' => 'Admin LexiCode',
-                'password' => Hash::make('password'), // Menggunakan Hash untuk keamanan
-            ]
-        );
+{
+    \App\Models\User::factory()->create([
+        'id' => 1,
+        'name' => 'Admin LexiCode',
+        'email' => 'admin@lexicode.test',
+    ]);
 
         // 2. Memanggil LexiCodeSeeder
         // Ini akan mengisi tabel projects, modules, dan snippets

@@ -13,11 +13,10 @@ return new class extends Migration
 {
     Schema::create('snippets', function (Blueprint $table) {
         $table->id();
-        $table->foreignId('module_id')->constrained()->onDelete('cascade'); // Masuk ke modul mana
-        $table->string('title'); // Nama fungsi/fitur
-        $table->text('code_block'); // Kode teknis mentah
-        $table->text('human_explanation'); // Penjelasan versi simpel
-        $table->string('language')->default('php'); // Bahasa pemrograman
+        $table->foreignId('module_id')->constrained()->onDelete('cascade');
+        $table->string('title');
+        $table->text('code');
+        $table->string('language')->default('php'); // e.g. php, javascript, sql
         $table->timestamps();
     });
 }

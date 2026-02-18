@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Snippet extends Model
 {
-    protected $fillable = ['module_id', 'title', 'code_block', 'human_explanation', 'language'];
+    protected $fillable = ['module_id', 'title', 'code', 'language'];
 
     public function module(): BelongsTo
     {
