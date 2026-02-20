@@ -1,52 +1,67 @@
-<x-guest-layout>
-    <form method="POST" action="{{ route('register') }}">
-        @csrf
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LexiCode</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+        body { font-family: 'JetBrains Mono', monospace; background: black; color: white; }
+    </style>
+</head>
+<body class="antialiased bg-black">
+    <div class="min-h-screen flex flex-col items-center justify-center p-6">
+        <div class="w-full max-w-md bg-zinc-950 border border-zinc-900 p-10 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,1)]">
+            
+            <div class="text-center mb-10">
+                <h1 class="text-3xl font-black text-yellow-500 tracking-tighter uppercase">REGISTER</h1>
+                <p class="text-zinc-500 text-[10px] font-bold tracking-[0.3em] uppercase mt-2">Join the Repository</p>
+            </div>
 
-        <!-- Name -->
-        <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
+            <form method="POST" action="{{ route('register') }}" class="space-y-5">
+                @csrf
+
+                <div class="space-y-1">
+                    <label class="text-[9px] font-black text-zinc-600 uppercase tracking-widest ml-1">Full Name</label>
+                    <input type="text" name="name" value="{{ old('name') }}" required
+                        class="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-yellow-500 transition-all"
+                        placeholder="John Doe">
+                    @error('name') <p class="text-[10px] text-red-500 mt-1 font-bold">{{ $message }}</p> @enderror
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[9px] font-black text-zinc-600 uppercase tracking-widest ml-1">Identity (Email)</label>
+                    <input type="email" name="email" value="{{ old('email') }}" required
+                        class="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-yellow-500 transition-all"
+                        placeholder="email@example.com">
+                    @error('email') <p class="text-[10px] text-red-500 mt-1 font-bold">{{ $message }}</p> @enderror
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[9px] font-black text-zinc-600 uppercase tracking-widest ml-1">Secret Key</label>
+                    <input type="password" name="password" required
+                        class="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-yellow-500 transition-all"
+                        placeholder="••••••••">
+                    @error('password') <p class="text-[10px] text-red-500 mt-1 font-bold">{{ $message }}</p> @enderror
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[9px] font-black text-zinc-600 uppercase tracking-widest ml-1">Verify Secret Key</label>
+                    <input type="password" name="password_confirmation" required
+                        class="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-yellow-500 transition-all"
+                        placeholder="••••••••">
+                </div>
+
+                <button type="submit" class="w-full bg-white text-black font-black py-4 rounded-xl text-[11px] uppercase tracking-[0.2em] hover:bg-yellow-500 transition-all mt-4 transform active:scale-[0.98]">
+                    Establish Account
+                </button>
+            </form>
+
+            <p class="text-center mt-10 text-[9px] font-bold text-zinc-700 uppercase tracking-widest">
+                Already registered? <a href="{{ route('login') }}" class="text-yellow-500 hover:underline">Access Login</a>
+            </p>
         </div>
-
-        <!-- Email Address -->
-        <div class="mt-4">
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
-
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
-
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="new-password" />
-
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
-
-        <!-- Confirm Password -->
-        <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-
-            <x-text-input id="password_confirmation" class="block mt-1 w-full"
-                            type="password"
-                            name="password_confirmation" required autocomplete="new-password" />
-
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
-        </div>
-
-        <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
-                {{ __('Already registered?') }}
-            </a>
-
-            <x-primary-button class="ms-4">
-                {{ __('Register') }}
-            </x-primary-button>
-        </div>
-    </form>
-</x-guest-layout>
+    </div>
+</body>
+</html>

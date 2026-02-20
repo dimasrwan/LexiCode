@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SnippetController;
 use App\Http\Controllers\RepositoryController;
 use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\GoogleAuthController;
 
 // Halaman Utama: Menampilkan daftar proyek LexiCode
 Route::get('/', [ProjectController::class, 'index'])->name('dashboard');
@@ -21,6 +22,8 @@ Route::delete('/snippet/{snippet}', [ProjectController::class, 'destroySnippet']
 Route::patch('/snippet/{snippet}', [SnippetController::class, 'update'])->name('snippets.update');
 Route::get('/repository', [RepositoryController::class, 'index'])->name('repository.index');
 Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
+Route::get('auth/google', [GoogleAuthController::class, 'redirectToGoogle'])->name('google.login');
+Route::get('auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
 
 // Route untuk fitur Profile (Bawaan Laravel Breeze/Starter Kit)
 Route::middleware('auth')->group(function () {
