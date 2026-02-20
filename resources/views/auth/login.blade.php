@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LexiCode</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-lexicode.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
@@ -29,7 +30,7 @@
                 @csrf
 
                 <div class="space-y-2">
-                    <label class="text-[9px] font-black text-zinc-600 uppercase tracking-widest ml-1">Identity</label>
+                    <label class="text-[9px] font-black text-zinc-600 uppercase tracking-widest ml-1">Email</label>
                     <input type="email" name="email" value="{{ old('email') }}" required autofocus
                         class="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-yellow-500 transition-all placeholder-zinc-700"
                         placeholder="email@example.com">
@@ -38,7 +39,7 @@
 
                 <div class="space-y-2">
                     <div class="flex justify-between items-center px-1">
-                        <label class="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Secret Key</label>
+                        <label class="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Password</label>
                         @if (Route::has('password.request'))
                             <a href="{{ route('password.request') }}" class="text-[8px] font-bold text-zinc-700 hover:text-yellow-500 transition-colors uppercase">Lost Key?</a>
                         @endif
@@ -54,7 +55,7 @@
                 </label>
 
                 <button type="submit" class="w-full bg-yellow-500 text-black font-black py-4 rounded-xl text-[11px] uppercase tracking-[0.2em] hover:bg-white transition-all transform active:scale-[0.98]">
-                    Initialise Login
+                    Login
                 </button>
             </form>
 

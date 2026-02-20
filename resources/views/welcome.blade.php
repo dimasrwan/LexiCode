@@ -43,7 +43,7 @@
     </div>
 
     <div class="fixed bottom-10 text-zinc-800 text-[10px] font-bold uppercase tracking-[0.5em]">
-        Encryption Active &bull; Zero Knowledge Architecture
+        @Dimas Irawan - 2026
     </div>
 
 </body>
