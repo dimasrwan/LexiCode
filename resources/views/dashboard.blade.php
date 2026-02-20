@@ -12,24 +12,25 @@
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-        body { font-family: 'JetBrains+Mono', monospace; }
+        body { font-family: 'JetBrains+Mono', monospace; background-color: #000; color: #f4f4f5; }
         
         [x-cloak] { display: none !important; }
 
-        .project-card { transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .project-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .project-card:hover { 
             transform: translateY(-5px);
-            box-shadow: 0 0 15px rgba(234, 179, 8, 0.1);
+            border-color: rgba(234, 179, 8, 0.5);
+            box-shadow: 0 10px 30px -10px rgba(234, 179, 8, 0.2);
         }
 
-        /* Custom Scrollbar ala Terminal */
+        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #000; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #eab308; }
     </style>
 </head>
-<body class="bg-black text-zinc-100" x-data="{ 
+<body x-data="{ 
     openModal: false, 
     editMode: false, 
     editData: { id: '', name: '', tech_stack: '', description: '' } 
@@ -37,15 +38,15 @@
 
     <nav class="border-b border-yellow-500/20 py-4 px-6 bg-zinc-950/50 backdrop-blur-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-3 cursor-pointer" onclick="window.location='/'">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="window.location='{{ route('dashboard') }}'">
                 <img src="{{ asset('images/logo-lexicode.png') }}" alt="LexiCode" class="h-8">
                 <span class="font-bold text-xl tracking-tighter text-yellow-400 uppercase">LEXI<span class="text-white font-light">CODE</span></span>
             </div>
 
             <div class="flex items-center gap-8">
                 <div class="hidden md:flex gap-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
-                    <a href="#" class="hover:text-yellow-400 transition-colors">Repository</a>
-                    <a href="#" class="hover:text-yellow-400 transition-colors">Analytics</a>
+                    <a href="{{ route('repository.index') }}" class="hover:text-yellow-400 transition-colors {{ request()->routeIs('repository.index') ? 'text-yellow-400' : '' }}">Repository</a>
+                    <a href="{{ route('analytics.index') }}" class="hover:text-yellow-400 transition-colors {{ request()->routeIs('analytics.index') ? 'text-yellow-400' : '' }}">Analytics</a>
                 </div>
                 
                 <button @click="editMode = false; editData = { id: '', name: '', tech_stack: '', description: '' }; openModal = true" 
@@ -66,8 +67,6 @@
                      x-show="show" 
                      x-init="setTimeout(() => show = false, 5000)"
                      x-transition:leave="transition ease-in duration-500"
-                     x-transition:leave-start="opacity-100"
-                     x-transition:leave-end="opacity-0"
                      class="mb-8 p-4 bg-yellow-500/10 border border-yellow-500/50 text-yellow-500 text-xs font-bold uppercase tracking-[0.2em] flex items-center justify-between">
                     <span>>> SYSTEM_MESSAGE: {{ session('success') }}</span>
                     <button @click="show = false" class="text-yellow-500/50 hover:text-yellow-500">✕</button>
@@ -77,7 +76,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             @forelse($projects as $project)
-            <div class="project-card group relative bg-zinc-900/40 border border-zinc-800 p-6 rounded-xl hover:border-yellow-500/50 transition-all duration-300 flex flex-col justify-between">
+            <div class="project-card group relative bg-zinc-900/40 border border-zinc-800 p-6 rounded-xl flex flex-col justify-between h-full">
                 <div>
                     <div class="absolute -top-3 -right-3 bg-yellow-500 text-black text-[10px] font-black px-2 py-1 rounded shadow-lg uppercase">
                         {{ $project->tech_stack }}
@@ -87,7 +86,7 @@
                         {{ $project->name }}
                     </h2>
                     
-                    <p class="text-zinc-400 text-sm leading-relaxed mb-6 h-12 overflow-hidden">
+                    <p class="text-zinc-400 text-sm leading-relaxed mb-6 line-clamp-2">
                         {{ $project->description }}
                     </p>
                 </div>
@@ -98,12 +97,12 @@
                     </div>
                     
                     <div class="flex items-center gap-3">
-                        <button @click="editMode = true; editData = { id: '{{ $project->id }}', name: '{{ $project->name }}', tech_stack: '{{ $project->tech_stack }}', description: '{{ addslashes($project->description) }}' }; openModal = true" 
+                        <button @click="editMode = true; editData = { id: '{{ $project->id }}', name: '{{ addslashes($project->name) }}', tech_stack: '{{ $project->tech_stack }}', description: '{{ addslashes($project->description) }}' }; openModal = true" 
                                 class="text-[10px] font-bold text-zinc-600 hover:text-yellow-500 transition-colors uppercase tracking-tighter">
                             [Edit]
                         </button>
 
-                        <form action="{{ route('projects.destroy', $project->id) }}" method="POST" onsubmit="return confirm('WARNING: TERMINATE THIS REPOSITORY?')" class="flex items-center">
+                        <form action="{{ route('projects.destroy', $project->id) }}" method="POST" onsubmit="return confirm('WARNING: TERMINATE THIS REPOSITORY?')" class="inline">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="text-[10px] font-bold text-zinc-600 hover:text-red-500 transition-colors uppercase tracking-tighter">
@@ -151,7 +150,7 @@
 
                 <div>
                     <label class="block text-[10px] font-black text-zinc-500 uppercase mb-2">Tech Stack</label>
-                    <input type="text" name="tech_stack" x-model="editData.tech_stack" required class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-yellow-500 text-white transition-colors">
+                    <input type="text" name="tech_stack" x-model="editData.tech_stack" required placeholder="e.g. Laravel, React, Python" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-yellow-500 text-white transition-colors">
                 </div>
 
                 <div>

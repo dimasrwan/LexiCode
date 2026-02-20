@@ -31,18 +31,21 @@
             font-size: 0.75rem !important;
             border-radius: 0.5rem;
         }
+
+        /* Highlight untuk hasil pencarian */
+        .search-match {
+            border-color: #eab308 !important;
+            box-shadow: 0 0 15px rgba(234, 179, 8, 0.1);
+        }
     </style>
 </head>
 <body x-data="{ openAdd: false, search: '' }">
 
     <div x-data="{ show: false, message: '', type: 'success' }" 
+        @chrome-notification.window="show = true; message = $event.detail; type = 'success'; setTimeout(() => show = false, 3000)"
         x-init="
             @if(session('success'))
                 show = true; message = '{{ session('success') }}'; type = 'success';
-                setTimeout(() => show = false, 3000);
-            @endif
-            @if(session('error'))
-                show = true; message = '{{ session('error') }}'; type = 'error';
                 setTimeout(() => show = false, 3000);
             @endif
         "
@@ -92,7 +95,6 @@
         </header>
 
         <div class="flex flex-col md:flex-row gap-12">
-            
             <aside class="hidden md:block w-56 shrink-0 text-white">
                 <div class="sticky top-28 space-y-10">
                     <div>
@@ -124,10 +126,6 @@
             </aside>
 
             <div class="flex-1 min-w-0">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-sm font-bold text-zinc-400 uppercase tracking-widest">Project Modules</h2>
-                </div>
-
                 <div class="space-y-6">
                     @forelse($project->modules as $index => $module)
                         <div 
@@ -160,7 +158,10 @@
                             <div x-show="showSnippets" x-collapse x-cloak>
                                 <div class="p-6 border-t border-zinc-800/50 bg-black/20 space-y-16">
                                     @forelse($module->snippets as $snippet)
-                                        <div x-data="{ copied: false }" class="space-y-4 group/snippet">
+                                        <div x-data="{ copied: false }" 
+                                             x-show="search === '' || '{{ strtolower($snippet->title) }}'.includes(search.toLowerCase()) || '{{ strtolower($snippet->language) }}'.includes(search.toLowerCase())"
+                                             class="space-y-4 group/snippet">
+                                            
                                             <div class="flex justify-between items-center px-1">
                                                 <h4 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-3">
                                                     <button @click="search = '{{ $snippet->language }}'; window.scrollTo({top: 0, behavior: 'smooth'})" 
@@ -175,6 +176,11 @@
                                                 </h4>
                                                 
                                                 <div class="flex items-center gap-4 opacity-0 group-hover/snippet:opacity-100 transition-all">
+                                                    <button @click="copyAsImage($refs.capture{{ $snippet->id }})" 
+                                                            class="text-[9px] font-bold text-zinc-600 hover:text-orange-400 transition-all uppercase tracking-widest">
+                                                        Copy IMG
+                                                    </button>
+
                                                     <button @click="exportSnippet($refs.capture{{ $snippet->id }}, '{{ $snippet->title }}')" 
                                                             class="text-[9px] font-bold text-zinc-600 hover:text-emerald-500 transition-all uppercase tracking-widest">
                                                         PNG
@@ -302,8 +308,8 @@
         <div @click.away="open = false" class="bg-zinc-950 border border-zinc-800 w-full max-w-2xl p-8 rounded-2xl shadow-2xl relative">
             <button @click="open = false" class="absolute top-4 right-4 text-zinc-500 hover:text-white text-lg">✕</button>
             <h2 class="text-xl font-bold text-white mb-6 uppercase tracking-tight">Edit Snippet</h2>
-            <form :action="'/snippet/' + id" method="POST" class="space-y-4">
-                @csrf @method('PATCH')
+            <form :action="'/snippets/' + id" method="POST" class="space-y-4">
+                @csrf @method('PUT')
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-1">
                         <label class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest ml-1">Title</label>
@@ -355,6 +361,27 @@
                 link.click();
                 document.body.style.cursor = 'default';
             });
+        }
+
+        // Copy Image to Clipboard
+        async function copyAsImage(element) {
+            document.body.style.cursor = 'wait';
+            try {
+                const canvas = await html2canvas(element, { 
+                    backgroundColor: '#000000',
+                    scale: 2 
+                });
+                canvas.toBlob(async (blob) => {
+                    const item = new ClipboardItem({ "image/png": blob });
+                    await navigator.clipboard.write([item]);
+                    window.dispatchEvent(new CustomEvent('chrome-notification', { detail: 'IMAGE_COPIED_TO_CLIPBOARD' }));
+                    document.body.style.cursor = 'default';
+                });
+            } catch (err) {
+                console.error('Clipboard Error:', err);
+                alert('Browser does not support image clipboard.');
+                document.body.style.cursor = 'default';
+            }
         }
 
         document.addEventListener('alpine:initialized', () => { 
