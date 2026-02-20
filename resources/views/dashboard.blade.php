@@ -12,7 +12,7 @@
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-        body { font-family: 'JetBrains+Mono', monospace; background-color: #000; color: #f4f4f5; }
+        body { font-family: 'JetBrains Mono', monospace; background-color: #000; color: #f4f4f5; }
         
         [x-cloak] { display: none !important; }
 
@@ -43,8 +43,8 @@
                 <span class="font-bold text-xl tracking-tighter text-yellow-400 uppercase">LEXI<span class="text-white font-light">CODE</span></span>
             </div>
 
-            <div class="flex items-center gap-8">
-                <div class="hidden md:flex gap-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
+            <div class="flex items-center gap-6">
+                <div class="hidden md:flex gap-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 border-r border-zinc-800 pr-6 mr-2">
                     <a href="{{ route('repository.index') }}" class="hover:text-yellow-400 transition-colors {{ request()->routeIs('repository.index') ? 'text-yellow-400' : '' }}">Repository</a>
                     <a href="{{ route('analytics.index') }}" class="hover:text-yellow-400 transition-colors {{ request()->routeIs('analytics.index') ? 'text-yellow-400' : '' }}">Analytics</a>
                 </div>
@@ -53,6 +53,17 @@
                         class="bg-yellow-500 text-black px-4 py-1.5 rounded text-[10px] font-black uppercase hover:bg-white transition-all shadow-[0_0_15px_rgba(234,179,8,0.3)]">
                     + New Project
                 </button>
+
+                <form method="POST" action="{{ route('logout') }}" class="inline">
+                    @csrf
+                    <button type="submit" 
+                            class="flex items-center gap-2 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded text-[10px] font-black text-zinc-500 hover:text-red-500 hover:border-red-500/50 transition-all uppercase tracking-widest">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Logout
+                    </button>
+                </form>
             </div>
         </div>
     </nav>
@@ -60,7 +71,7 @@
     <main class="max-w-7xl mx-auto py-12 px-6">
         <div class="mb-12">
             <h1 class="text-4xl font-extrabold text-white mb-2 tracking-tighter uppercase">Projects<span class="text-yellow-500">_</span></h1>
-            <p class="text-zinc-500 text-sm mb-8">Welcome back, Admin. System is operational and secured.</p>
+            <p class="text-zinc-500 text-sm mb-8">Welcome back, <span class="text-yellow-500 font-bold">{{ Auth::user()->name }}</span>. System is operational and secured.</p>
 
             @if(session('success'))
                 <div x-data="{ show: true }" 

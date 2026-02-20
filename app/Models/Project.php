@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Project extends Model
 {
-    protected $fillable = ['user_id', 'name', 'slug', 'description', 'tech_stack'];
+    protected $fillable = ['name', 'description', 'tech_stack', 'user_id'];
 
     // Relasi: Satu Project memiliki banyak Module
     public function modules() {

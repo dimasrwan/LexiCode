@@ -7,15 +7,25 @@ use App\Models\Module;
 use App\Models\Snippet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class ProjectController extends Controller
 {
+    /**
+     * Menampilkan hanya project milik user yang sedang login.
+     */
     public function index()
     {
-        $projects = Project::withCount('modules')->get();
+        $projects = Project::where('user_id', Auth::id())
+            ->withCount('modules')
+            ->get();
+            
         return view('dashboard', compact('projects'));
     }
 
+    /**
+     * Menyimpan project baru dengan mengaitkan ke ID user login.
+     */
     public function store(Request $request)
     {
         $request->validate([
@@ -25,9 +35,9 @@ class ProjectController extends Controller
         ]);
 
         Project::create([
-            'user_id' => 1, // Pastikan ini sesuai dengan sistem auth kamu nantinya
+            'user_id' => Auth::id(), // Sekarang dinamis
             'name' => $request->name,
-            'slug' => Str::slug($request->name),
+            'slug' => Str::slug($request->name) . '-' . Str::random(5), // Tambah random agar slug unik jika nama sama
             'description' => $request->description,
             'tech_stack' => $request->tech_stack,
         ]);
@@ -35,19 +45,22 @@ class ProjectController extends Controller
         return redirect()->route('dashboard')->with('success', 'Project initialized successfully!');
     }
 
-    // --- FITUR UPDATE PROJECT (Menghilangkan Error 500) ---
+    /**
+     * Update Metadata Project (Hanya jika milik sendiri).
+     */
     public function update(Request $request, $id)
     {
+        $project = Project::where('user_id', Auth::id())->findOrFail($id);
+
         $request->validate([
             'name' => 'required|max:255',
             'tech_stack' => 'required',
             'description' => 'required',
         ]);
 
-        $project = Project::findOrFail($id);
         $project->update([
             'name' => $request->name,
-            'slug' => Str::slug($request->name),
+            'slug' => Str::slug($request->name) . '-' . Str::random(5),
             'description' => $request->description,
             'tech_stack' => $request->tech_stack,
         ]);
@@ -55,18 +68,27 @@ class ProjectController extends Controller
         return back()->with('success', 'PROJECT_METADATA_UPDATED');
     }
 
+    /**
+     * Menampilkan detail project (Hanya jika milik sendiri).
+     */
     public function show($slug)
     {
         $project = Project::where('slug', $slug)
-            ->with(['modules.snippets']) // Eager loading snippets agar tidak N+1 query
+            ->where('user_id', Auth::id()) // Proteksi agar tidak bisa intip via URL
+            ->with(['modules.snippets'])
             ->firstOrFail();
 
         return view('projects.show', compact('project'));
     }
 
-    // --- MODULE CONTROLS ---
+    /**
+     * MODULE CONTROLS - Dengan validasi kepemilikan project
+     */
     public function storeModule(Request $request, $projectId)
     {
+        // Pastikan project yang akan ditambah module adalah milik user ini
+        Project::where('user_id', Auth::id())->findOrFail($projectId);
+
         $request->validate([
             'title' => 'required|max:255',
         ]);
@@ -83,14 +105,25 @@ class ProjectController extends Controller
 
     public function destroyModule($id)
     {
-        $module = Module::findOrFail($id);
+        // Menggunakan relasi untuk memastikan module yang dihapus ada dalam project milik user
+        $module = Module::whereHas('project', function($q) {
+            $q->where('user_id', Auth::id());
+        })->findOrFail($id);
+
         $module->delete(); 
         return back()->with('success', 'Module and all snippets purged.');
     }
 
-    // --- SNIPPET CONTROLS ---
+    /**
+     * SNIPPET CONTROLS - Dengan validasi kepemilikan lewat module
+     */
     public function storeSnippet(Request $request, $moduleId)
     {
+        // Pastikan module milik project milik user login
+        Module::whereHas('project', function($q) {
+            $q->where('user_id', Auth::id());
+        })->findOrFail($moduleId);
+
         $request->validate([
             'title' => 'required',
             'code' => 'required',
@@ -109,13 +142,16 @@ class ProjectController extends Controller
 
     public function updateSnippet(Request $request, $id)
     {
+        $snippet = Snippet::whereHas('module.project', function($q) {
+            $q->where('user_id', Auth::id());
+        })->findOrFail($id);
+
         $request->validate([
             'title' => 'required',
             'code' => 'required',
             'language' => 'required'
         ]);
 
-        $snippet = Snippet::findOrFail($id);
         $snippet->update($request->all());
 
         return back()->with('success', 'SNIPPET_UPDATED_SUCCESSFULLY');
@@ -123,16 +159,21 @@ class ProjectController extends Controller
 
     public function destroySnippet($id)
     {
-        $snippet = Snippet::findOrFail($id);
+        $snippet = Snippet::whereHas('module.project', function($q) {
+            $q->where('user_id', Auth::id());
+        })->findOrFail($id);
+
         $snippet->delete();
 
         return back()->with('success', 'Snippet purged successfully.');
     }
 
-    // --- PROJECT DESTRUCTION ---
+    /**
+     * PROJECT DESTRUCTION
+     */
     public function destroy($id)
     {
-        $project = Project::findOrFail($id);
+        $project = Project::where('user_id', Auth::id())->findOrFail($id);
         $project->delete();
 
         return redirect()->route('dashboard')->with('success', 'PROJECT_DELETED_FROM_SYSTEM');
