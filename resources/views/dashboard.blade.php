@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <title>LexiCode</title>
+    <title>LexiCode | Dashboard</title>
     <link rel="icon" type="image/png" href="{{ asset('images/logo-lexicode.png') }}">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -45,25 +45,25 @@
 
             <div class="flex items-center gap-6">
                 <div class="hidden md:flex gap-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 border-r border-zinc-800 pr-6 mr-2">
-                    <a href="{{ route('repository.index') }}" class="hover:text-yellow-400 transition-colors {{ request()->routeIs('repository.index') ? 'text-yellow-400' : '' }}">Repository</a>
-                    <a href="{{ route('analytics.index') }}" class="hover:text-yellow-400 transition-colors {{ request()->routeIs('analytics.index') ? 'text-yellow-400' : '' }}">Analytics</a>
+                    <a href="{{ route('dashboard') }}" class="hover:text-yellow-400 transition-colors {{ request()->routeIs('dashboard') ? 'text-yellow-400' : '' }}">Repository</a>
+                    <a href="#" class="hover:text-yellow-400 transition-colors">Analytics</a>
+                    <a href="{{ route('profile.edit') }}" class="hover:text-yellow-400 transition-colors">Settings</a>
                 </div>
                 
-                <button @click="editMode = false; editData = { id: '', name: '', tech_stack: '', description: '' }; openModal = true" 
-                        class="bg-yellow-500 text-black px-4 py-1.5 rounded text-[10px] font-black uppercase hover:bg-white transition-all shadow-[0_0_15px_rgba(234,179,8,0.3)]">
-                    + New Project
-                </button>
-
-                <form method="POST" action="{{ route('logout') }}" class="inline">
-                    @csrf
-                    <button type="submit" 
-                            class="flex items-center gap-2 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded text-[10px] font-black text-zinc-500 hover:text-red-500 hover:border-red-500/50 transition-all uppercase tracking-widest">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
-                        Logout
+                <div class="flex items-center gap-4">
+                    <button @click="editMode = false; editData = { id: '', name: '', tech_stack: '', description: '' }; openModal = true" 
+                            class="bg-yellow-500 text-black px-4 py-1.5 rounded text-[10px] font-black uppercase hover:bg-white transition-all shadow-[0_0_15px_rgba(234,179,8,0.3)]">
+                        + New Project
                     </button>
-                </form>
+
+                    <form method="POST" action="{{ route('logout') }}" class="inline">
+                        @csrf
+                        <button type="submit" 
+                                class="flex items-center gap-2 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded text-[10px] font-black text-zinc-500 hover:text-red-500 hover:border-red-500/50 transition-all uppercase tracking-widest group leading-none">
+                            Logout
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </nav>
@@ -71,16 +71,13 @@
     <main class="max-w-7xl mx-auto py-12 px-6">
         <div class="mb-12">
             <h1 class="text-4xl font-extrabold text-white mb-2 tracking-tighter uppercase">Projects<span class="text-yellow-500">_</span></h1>
-            <p class="text-zinc-500 text-sm mb-8">Welcome back, <span class="text-yellow-500 font-bold">{{ Auth::user()->name }}</span>. System is operational and secured.</p>
+            <p class="text-zinc-500 text-sm mb-8">Welcome back, <span class="text-yellow-500 font-bold">{{ Auth::user()->name }}</span>. System operational.</p>
 
             @if(session('success'))
-                <div x-data="{ show: true }" 
-                     x-show="show" 
-                     x-init="setTimeout(() => show = false, 5000)"
-                     x-transition:leave="transition ease-in duration-500"
+                <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
                      class="mb-8 p-4 bg-yellow-500/10 border border-yellow-500/50 text-yellow-500 text-xs font-bold uppercase tracking-[0.2em] flex items-center justify-between">
                     <span>>> SYSTEM_MESSAGE: {{ session('success') }}</span>
-                    <button @click="show = false" class="text-yellow-500/50 hover:text-yellow-500">✕</button>
+                    <button @click="show = false">✕</button>
                 </div>
             @endif
         </div>
@@ -97,32 +94,31 @@
                         {{ $project->name }}
                     </h2>
                     
-                    <p class="text-zinc-400 text-sm leading-relaxed mb-6 line-clamp-2">
-                        {{ $project->description }}
+                    <p class="text-zinc-400 text-sm leading-relaxed mb-6 line-clamp-2 italic">
+                        "{{ $project->description }}"
                     </p>
                 </div>
 
-                <div class="flex justify-between items-center pt-4 border-t border-zinc-800">
-                    <div class="text-[11px] text-zinc-500 font-bold uppercase">
+                <div class="flex justify-between items-center pt-4 border-t border-zinc-800/50">
+                    <div class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
                         <span class="text-yellow-500">{{ $project->modules_count }}</span> Modules
                     </div>
                     
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-4">
                         <button @click="editMode = true; editData = { id: '{{ $project->id }}', name: '{{ addslashes($project->name) }}', tech_stack: '{{ $project->tech_stack }}', description: '{{ addslashes($project->description) }}' }; openModal = true" 
-                                class="text-[10px] font-bold text-zinc-600 hover:text-yellow-500 transition-colors uppercase tracking-tighter">
+                                class="text-[10px] font-bold text-zinc-600 hover:text-white transition-colors uppercase leading-none">
                             [Edit]
                         </button>
 
-                        <form action="{{ route('projects.destroy', $project->id) }}" method="POST" onsubmit="return confirm('WARNING: TERMINATE THIS REPOSITORY?')" class="inline">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="text-[10px] font-bold text-zinc-600 hover:text-red-500 transition-colors uppercase tracking-tighter">
+                        <form action="{{ route('projects.destroy', $project->id) }}" method="POST" onsubmit="return confirm('TERMINATE REPOSITORY?')" class="inline-flex">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="text-[10px] font-bold text-zinc-600 hover:text-red-500 transition-colors uppercase leading-none">
                                 [Delete]
                             </button>
                         </form>
 
-                        <a href="{{ route('projects.show', $project->slug) }}" class="text-xs font-black text-yellow-500 hover:text-white transition-colors tracking-tighter">
-                            OPEN DOCS >>
+                        <a href="{{ route('projects.show', $project->slug) }}" class="text-[11px] font-black text-yellow-500 hover:text-white transition-colors tracking-tighter uppercase leading-none flex items-center">
+                            Open Docs >>
                         </a>
                     </div>
                 </div>
@@ -135,13 +131,7 @@
         </div>
     </main>
 
-    <div x-show="openModal" 
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm" 
-         x-cloak>
-        
+    <div x-show="openModal" x-transition.opacity class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm" x-cloak>
         <div @click.away="openModal = false" class="bg-zinc-950 border border-yellow-500/30 w-full max-w-lg p-8 rounded-2xl shadow-2xl">
             <div class="flex justify-between items-center mb-6 border-b border-zinc-800 pb-4">
                 <h2 class="text-xl font-black text-yellow-400 uppercase tracking-tighter" x-text="editMode ? 'Update_Repository' : 'Initialize_Project'"></h2>
@@ -161,7 +151,7 @@
 
                 <div>
                     <label class="block text-[10px] font-black text-zinc-500 uppercase mb-2">Tech Stack</label>
-                    <input type="text" name="tech_stack" x-model="editData.tech_stack" required placeholder="e.g. Laravel, React, Python" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-yellow-500 text-white transition-colors">
+                    <input type="text" name="tech_stack" x-model="editData.tech_stack" required placeholder="e.g. Laravel, React" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-yellow-500 text-white transition-colors">
                 </div>
 
                 <div>

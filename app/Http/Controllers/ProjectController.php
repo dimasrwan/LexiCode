@@ -12,19 +12,20 @@ use Illuminate\Support\Facades\Auth;
 class ProjectController extends Controller
 {
     /**
-     * Menampilkan hanya project milik user yang sedang login.
+     * Menampilkan dashboard dengan daftar project milik user.
      */
     public function index()
     {
         $projects = Project::where('user_id', Auth::id())
             ->withCount('modules')
+            ->latest() // Menampilkan project terbaru di atas
             ->get();
             
         return view('dashboard', compact('projects'));
     }
 
     /**
-     * Menyimpan project baru dengan mengaitkan ke ID user login.
+     * Menyimpan project baru.
      */
     public function store(Request $request)
     {
@@ -35,18 +36,19 @@ class ProjectController extends Controller
         ]);
 
         Project::create([
-            'user_id' => Auth::id(), // Sekarang dinamis
+            'user_id' => Auth::id(),
             'name' => $request->name,
-            'slug' => Str::slug($request->name) . '-' . Str::random(5), // Tambah random agar slug unik jika nama sama
+            // Slug unik: nama-project-randomstring
+            'slug' => Str::slug($request->name) . '-' . Str::lower(Str::random(5)),
             'description' => $request->description,
             'tech_stack' => $request->tech_stack,
         ]);
 
-        return redirect()->route('dashboard')->with('success', 'Project initialized successfully!');
+        return redirect()->route('dashboard')->with('success', 'PROJECT_INITIALIZED_SUCCESSFULLY');
     }
 
     /**
-     * Update Metadata Project (Hanya jika milik sendiri).
+     * Update Metadata Project.
      */
     public function update(Request $request, $id)
     {
@@ -58,35 +60,42 @@ class ProjectController extends Controller
             'description' => 'required',
         ]);
 
-        $project->update([
+        $data = [
             'name' => $request->name,
-            'slug' => Str::slug($request->name) . '-' . Str::random(5),
             'description' => $request->description,
             'tech_stack' => $request->tech_stack,
-        ]);
+        ];
+
+        // LOGIC: Slug hanya diperbarui jika nama project berubah
+        if ($project->name !== $request->name) {
+            $data['slug'] = Str::slug($request->name) . '-' . Str::lower(Str::random(5));
+        }
+
+        $project->update($data);
 
         return back()->with('success', 'PROJECT_METADATA_UPDATED');
     }
 
     /**
-     * Menampilkan detail project (Hanya jika milik sendiri).
+     * Menampilkan detail project (Modules & Snippets).
      */
     public function show($slug)
     {
         $project = Project::where('slug', $slug)
-            ->where('user_id', Auth::id()) // Proteksi agar tidak bisa intip via URL
-            ->with(['modules.snippets'])
+            ->where('user_id', Auth::id())
+            ->with(['modules' => function($query) {
+                $query->orderBy('order', 'asc'); // Urutkan module berdasarkan field order
+            }, 'modules.snippets'])
             ->firstOrFail();
 
         return view('projects.show', compact('project'));
     }
 
     /**
-     * MODULE CONTROLS - Dengan validasi kepemilikan project
+     * MODULE CONTROLS
      */
     public function storeModule(Request $request, $projectId)
     {
-        // Pastikan project yang akan ditambah module adalah milik user ini
         Project::where('user_id', Auth::id())->findOrFail($projectId);
 
         $request->validate([
@@ -105,27 +114,25 @@ class ProjectController extends Controller
 
     public function destroyModule($id)
     {
-        // Menggunakan relasi untuk memastikan module yang dihapus ada dalam project milik user
         $module = Module::whereHas('project', function($q) {
             $q->where('user_id', Auth::id());
         })->findOrFail($id);
 
         $module->delete(); 
-        return back()->with('success', 'Module and all snippets purged.');
+        return back()->with('success', 'MODULE_PURGED_FROM_SYSTEM');
     }
 
     /**
-     * SNIPPET CONTROLS - Dengan validasi kepemilikan lewat module
+     * SNIPPET CONTROLS
      */
     public function storeSnippet(Request $request, $moduleId)
     {
-        // Pastikan module milik project milik user login
         Module::whereHas('project', function($q) {
             $q->where('user_id', Auth::id());
         })->findOrFail($moduleId);
 
         $request->validate([
-            'title' => 'required',
+            'title' => 'required|max:255',
             'code' => 'required',
             'language' => 'required'
         ]);
@@ -137,7 +144,7 @@ class ProjectController extends Controller
             'language' => $request->language,
         ]);
 
-        return back()->with('success', 'SNIPPET_LOADED_TO_MODULE');
+        return back()->with('success', 'SNIPPET_ENCRYPTED_AND_STORED');
     }
 
     public function updateSnippet(Request $request, $id)
@@ -147,14 +154,14 @@ class ProjectController extends Controller
         })->findOrFail($id);
 
         $request->validate([
-            'title' => 'required',
+            'title' => 'required|max:255',
             'code' => 'required',
             'language' => 'required'
         ]);
 
-        $snippet->update($request->all());
+        $snippet->update($request->only(['title', 'code', 'language']));
 
-        return back()->with('success', 'SNIPPET_UPDATED_SUCCESSFULLY');
+        return back()->with('success', 'SNIPPET_METADATA_UPDATED');
     }
 
     public function destroySnippet($id)
@@ -165,17 +172,17 @@ class ProjectController extends Controller
 
         $snippet->delete();
 
-        return back()->with('success', 'Snippet purged successfully.');
+        return back()->with('success', 'SNIPPET_PERMANENTLY_PURGED');
     }
 
     /**
-     * PROJECT DESTRUCTION
+     * Menghapus seluruh Project.
      */
     public function destroy($id)
     {
         $project = Project::where('user_id', Auth::id())->findOrFail($id);
         $project->delete();
 
-        return redirect()->route('dashboard')->with('success', 'PROJECT_DELETED_FROM_SYSTEM');
+        return redirect()->route('dashboard')->with('success', 'PROJECT_TERMINATED');
     }
 }
